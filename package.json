@@ -1,6 +1,6 @@
 {
-  "name": "remark-slate",
-  "version": "1.5.1",
+  "name": "@1build/remark-slate",
+  "version": "1.5.1-b.1",
   "description": "remark plugin to compile Markdown to a slate compatible object",
   "license": "MIT",
   "module": "dist/remark-slate.esm.js",
@@ -23,12 +23,18 @@
     "RTE",
     "text editor"
   ],
-  "repository": "hanford/remark-slate",
-  "bugs": "https://github.com/hanford/remark-slate/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1build/remark-slate.git"
+  },
+  "bugs": {
+    "url": "https://github.com/1build/remark-slate/issues"
+  },
   "author": "Jack Hanford <jackhanford@gmail.com> (https://jackhanford.com)",
   "contributors": [
     "Jack Hanford <jackhanford@gmail.com> (https://jackhanford.com)",
-    "Horacio Herrera <hi@horacioh.com> (https://horacioh.com)"
+    "Horacio Herrera <hi@horacioh.com> (https://horacioh.com)",
+    "Michael Darr <michael@1build.com> (https://michaeldarr.github.io)"
   ],
   "files": [
     "dist",
@@ -60,5 +66,9 @@
     "hooks": {
       "pre-commit": "tsdx lint"
     }
+  },
+  "homepage": "https://github.com/1build/remark-slate#readme",
+  "directories": {
+    "test": "test"
   }
 }
