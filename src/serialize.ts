@@ -8,6 +8,7 @@ export interface LeafType {
   bold?: boolean;
   italic?: boolean;
   parentType?: string;
+  underline?: string;
 }
 
 export interface BlockType {
@@ -152,6 +153,10 @@ export default function serialize(
 
       if (chunk.strikeThrough) {
         children = retainWhitespaceAndFormat(children, '~~');
+      }
+
+      if (chunk.underline) {
+        children = retainWhitespaceAndFormat(children, '++');
       }
     }
   }
