@@ -179,7 +179,7 @@ export default function serialize(
       // For some reason, marked is parsing blockquotes w/ one new line
       // as contiued blockquotes, so adding two new lines ensures that doesn't
       // happen
-      return `> ${children}\n\n`;
+      return `> ${children.replace(/\n/g, '\n> ')}\n\n`;
 
     case nodeTypes.code_block:
       return `\`\`\`${
