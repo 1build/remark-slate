@@ -20,7 +20,7 @@ test('Deserialize and serialize mix of break tags and new lines', (done) => {
       //@ts-ignore ts doesn't know about file.result
       const res = file.result;
       expect(res).toMatchSnapshot();
-
+      //@ts-ignore ts **still** doesn't know about file.result
       const fin = res.map((v: LeafType | BlockType) => serialize(v)).join('');
 
       expect(fin).toEqual(mdown);
@@ -39,7 +39,7 @@ test('Deserialize heading with new line', (done) => {
       //@ts-ignore ts doesn't know about file.result
       const res = file.result;
       expect(res).toMatchSnapshot();
-
+      //@ts-ignore ts **still** doesn't know about file.result
       const fin = res.map((v: LeafType | BlockType) => serialize(v)).join('');
 
       expect(fin).toEqual(headingWithNewLine);
