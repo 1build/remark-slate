@@ -19,7 +19,7 @@ export interface BlockType {
   children: Array<BlockType | LeafType>;
 }
 
-interface Options {
+export interface SerializeOptions {
   nodeTypes: NodeTypes;
   listDepth?: number;
   ignoreParagraphNewline?: boolean;
@@ -35,7 +35,7 @@ const BREAK_TAG = '<br>';
 
 export default function serialize(
   chunk: BlockType | LeafType,
-  opts: Options = { nodeTypes: defaultNodeTypes }
+  opts: SerializeOptions = { nodeTypes: defaultNodeTypes }
 ) {
   const {
     nodeTypes: userNodeTypes = defaultNodeTypes,
