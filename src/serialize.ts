@@ -196,6 +196,9 @@ export default function serialize(
 
     case nodeTypes.ul_list:
     case nodeTypes.ol_list:
+      if (chunk.parentType === nodeTypes.listItem) {
+        return `\n\n${children}`;
+      }
       return `\n${children}\n`;
 
     case nodeTypes.listItem:
@@ -210,10 +213,16 @@ export default function serialize(
           spacer += '  ';
         }
       }
-      return `${spacer}${isOL ? '1.' : '-'} ${children}`;
+      return `${spacer}${isOL ? '1.' : '-'} ${children}\n`;
 
     case nodeTypes.paragraph:
-      return `${isPreceededByNewline ? '' : '\n'}${children}\n`;
+      if (chunk.parentType === nodeTypes.listItem) {
+        return children;
+      }
+      if (isPreceededByNewline) {
+        return `${children}\n`;
+      }
+      return `\n${children}\n`;
 
     case nodeTypes.thematic_break:
       return `---\n`;
