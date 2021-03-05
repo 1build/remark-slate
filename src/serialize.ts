@@ -24,6 +24,7 @@ export interface SerializeOptions {
   nodeTypes: NodeTypes;
   listDepth?: number;
   ignoreParagraphNewline?: boolean;
+  isPreceededByNewline?: boolean;
 }
 
 const isLeafNode = (node: BlockType | LeafType): node is LeafType => {
@@ -41,6 +42,7 @@ export default function serialize(
   const {
     nodeTypes: userNodeTypes = defaultNodeTypes,
     ignoreParagraphNewline = false,
+    isPreceededByNewline = true,
     listDepth = 0,
   } = opts;
 
@@ -61,60 +63,63 @@ export default function serialize(
   let children = text;
 
   if (!isLeafNode(chunk)) {
-    children = chunk.children
-      .map((c: BlockType | LeafType) => {
-        const isList = !isLeafNode(c)
-          ? LIST_TYPES.includes(c.type || '')
-          : false;
+    // Doing this iteritively slows it down (compared to something like `map`
+    // or `foreach`) but is the only way I can thinkof to have the paragraph
+    // lookbehind we use for `isPreceededByNewline`.
+    children = '';
+    for (let i = 0; i < chunk.children.length; i++) {
+      const c = chunk.children[i];
+      const isList = !isLeafNode(c) ? LIST_TYPES.includes(c.type || '') : false;
 
-        const selfIsList = LIST_TYPES.includes(chunk.type || '');
+      const selfIsList = LIST_TYPES.includes(chunk.type || '');
 
-        // Links can have the following shape
-        // In which case we don't want to surround
-        // with break tags
-        // {
-        //  type: 'paragraph',
-        //  children: [
-        //    { text: '' },
-        //    { type: 'link', children: [{ text: foo.com }]}
-        //    { text: '' }
-        //  ]
-        // }
-        let childrenHasLink = false;
+      // Links can have the following shape
+      // In which case we don't want to surround
+      // with break tags
+      // {
+      //  type: 'paragraph',
+      //  children: [
+      //    { text: '' },
+      //    { type: 'link', children: [{ text: foo.com }]}
+      //    { text: '' }
+      //  ]
+      // }
+      let childrenHasLink = false;
 
-        if (!isLeafNode(chunk) && Array.isArray(chunk.children)) {
-          childrenHasLink = chunk.children.some(
-            (f) => !isLeafNode(f) && f.type === nodeTypes.link
-          );
-        }
-
-        return serialize(
-          { ...c, parentType: type },
-          {
-            nodeTypes,
-            // WOAH.
-            // what we're doing here is pretty tricky, it relates to the block below where
-            // we check for ignoreParagraphNewline and set type to paragraph.
-            // We want to strip out empty paragraphs sometimes, but other times we don't.
-            // If we're the descendant of a list, we know we don't want a bunch
-            // of whitespace. If we're parallel to a link we also don't want
-            // to respect neighboring paragraphs
-            ignoreParagraphNewline:
-              (ignoreParagraphNewline ||
-                isList ||
-                selfIsList ||
-                childrenHasLink) &&
-              // if we have c.break, never ignore empty paragraph new line
-              !(c as BlockType).break,
-
-            // track depth of nested lists so we can add proper spacing
-            listDepth: LIST_TYPES.includes((c as BlockType).type || '')
-              ? listDepth + 1
-              : listDepth,
-          }
+      if (!isLeafNode(chunk) && Array.isArray(chunk.children)) {
+        childrenHasLink = chunk.children.some(
+          (f) => !isLeafNode(f) && f.type === nodeTypes.link
         );
-      })
-      .join('');
+      }
+
+      children += serialize(
+        { ...c, parentType: type },
+        {
+          nodeTypes,
+          // WOAH.
+          // what we're doing here is pretty tricky, it relates to the block below where
+          // we check for ignoreParagraphNewline and set type to paragraph.
+          // We want to strip out empty paragraphs sometimes, but other times we don't.
+          // If we're the descendant of a list, we know we don't want a bunch
+          // of whitespace. If we're parallel to a link we also don't want
+          // to respect neighboring paragraphs
+          ignoreParagraphNewline:
+            (ignoreParagraphNewline ||
+              isList ||
+              selfIsList ||
+              childrenHasLink) &&
+            // if we have c.break, never ignore empty paragraph new line
+            !(c as BlockType).break,
+          // When recurring, let the next block know if the one before it ended with a newline.
+          // If it did, we don't insert another one before paragraphs.
+          isPreceededByNewline: children === '' || children.endsWith('\n'),
+          // track depth of nested lists so we can add proper spacing
+          listDepth: LIST_TYPES.includes((c as BlockType).type || '')
+            ? listDepth + 1
+            : listDepth,
+        }
+      );
+    }
   }
 
   // This is pretty fragile code, check the long comment where we iterate over children
@@ -128,7 +133,7 @@ export default function serialize(
   }
 
   if (children === '' && !VOID_ELEMENTS.find((k) => nodeTypes[k] === type))
-    return;
+    return '';
 
   // Never allow decorating break tags with rich text formatting,
   // this can malform generated markdown
@@ -208,7 +213,7 @@ export default function serialize(
       return `${spacer}${isOL ? '1.' : '-'} ${children}`;
 
     case nodeTypes.paragraph:
-      return `${children}\n`;
+      return `${isPreceededByNewline ? '' : '\n'}${children}\n`;
 
     case nodeTypes.thematic_break:
       return `---\n`;
