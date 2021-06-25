@@ -129,7 +129,7 @@ export default function deserialize(node: MdastNode, opts?: OptionType) {
         };
       }
       // TODO: Handle other HTML?
-      return { type: 'paragraph', children: [{ text: '' }] };
+      return { type: 'paragraph', children: [{ text: node.value || '' }] };
 
     case 'emphasis':
       return {
